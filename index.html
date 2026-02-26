@@ -1,106 +1,1801 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Social Hosting Manager</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2c7be5">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body { font-family: Arial; direction: rtl; margin:20px; background:#f4f6f8; }
-.section { background:white; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-input,textarea,select,button { width:100%; margin:5px 0; padding:8px; }
-button { background:#2c7be5; color:white; border:none; border-radius:5px; cursor:pointer; }
-button:hover { background:#1a68d1; }
-canvas { max-height:300px; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Social Hosting Manager</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#0f1a2e;
+      --card2:#0c1628;
+      --text:#e8eefc;
+      --muted:#a9b7d7;
+      --border:rgba(255,255,255,.08);
+      --brand:#2563eb;
+      --brand2:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 600px at 80% -10%, rgba(37,99,235,.35), transparent 55%),
+                  radial-gradient(900px 500px at -10% 20%, rgba(34,197,94,.20), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{ color:inherit; }
+
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,18,32,.65);
+      border-bottom:1px solid var(--border);
+    }
+    .topbar-inner{
+      max-width:1100px;
+      margin:0 auto;
+      padding:16px 18px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800; letter-spacing:.2px;
+    }
+    .badge{
+      font-size:12px;
+      padding:5px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      color:var(--muted);
+      background: rgba(255,255,255,.03);
+    }
+    .actions{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+
+    .container{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px;
+      display:grid;
+      gap:14px;
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background: rgba(255,255,255,.03);
+      justify-content:flex-start;
+    }
+    .tabbtn{
+      border:0;
+      background: transparent;
+      color: var(--muted);
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      transition:.15s ease;
+    }
+    .tabbtn.active{
+      color:var(--text);
+      background: rgba(37,99,235,.18);
+      box-shadow: inset 0 0 0 1px rgba(37,99,235,.25);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    @media(min-width: 980px){
+      .grid{
+        grid-template-columns: 420px 1fr;
+        align-items:start;
+      }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .card-title{
+      font-weight:800;
+      margin:0;
+      font-size:14px;
+      color: var(--text);
+    }
+    .card-sub{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .card-body{
+      padding:14px 16px;
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:10px 0 6px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{ min-height:88px; resize:vertical; }
+    input::placeholder, textarea::placeholder{ color: rgba(169,183,215,.65); }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .row3{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media(max-width:520px){
+      .row,.row3{ grid-template-columns:1fr; }
+    }
+
+    .btn{
+      border:0;
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      color:#fff;
+      background: rgba(37,99,235,.95);
+      transition:.15s ease;
+      box-shadow: 0 10px 22px rgba(37,99,235,.18);
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn.secondary{
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      box-shadow:none;
+      border:1px solid var(--border);
+    }
+    .btn.danger{
+      background: rgba(239,68,68,.92);
+      box-shadow: 0 10px 22px rgba(239,68,68,.18);
+    }
+    .btn.green{
+      background: rgba(34,197,94,.92);
+      box-shadow: 0 10px 22px rgba(34,197,94,.14);
+    }
+    .btn.warn{
+      background: rgba(245,158,11,.92);
+      box-shadow: 0 10px 22px rgba(245,158,11,.14);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+
+    .guest-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .guest-chip{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      font-weight:700;
+      color: var(--text);
+      cursor:pointer;
+    }
+    .guest-chip small{ color: var(--muted); font-weight:700; }
+    .guest-chip:hover{
+      background: rgba(37,99,235,.12);
+      border-color: rgba(37,99,235,.25);
+    }
+
+    .checkgrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px 10px;
+      margin-top:8px;
+    }
+    @media(max-width:520px){
+      .checkgrid{ grid-template-columns:1fr; }
+    }
+    .check{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+    .check input{ width:auto; }
+    .check .meta{
+      display:flex; flex-direction:column; gap:2px;
+      min-width:0;
+    }
+    .check .meta b{
+      font-size:13px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .check .meta span{
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media(max-width:980px){
+      .split{ grid-template-columns:1fr; }
+    }
+
+    .kpi{
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap:10px;
+    }
+    @media(min-width:760px){
+      .kpi{ grid-template-columns: repeat(4, 1fr); }
+    }
+    .kpi-card{
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .kpi-card .k{ color:var(--muted); font-size:12px; font-weight:800; }
+    .kpi-card .v{ font-size:20px; font-weight:900; margin-top:4px; }
+
+    .table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid var(--border);
+    }
+    .table th, .table td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      text-align:right;
+      font-size:13px;
+    }
+    .table th{
+      color: var(--muted);
+      font-weight:900;
+      background: rgba(255,255,255,.03);
+    }
+    .table tr:hover td{
+      background: rgba(37,99,235,.08);
+    }
+
+    .event-card{
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+      margin-bottom:10px;
+    }
+    .event-head{
+      display:flex; justify-content:space-between; gap:10px; align-items:baseline;
+      margin-bottom:8px;
+    }
+    .event-head b{ font-size:14px; }
+    .event-head span{ color:var(--muted); font-size:12px; }
+    .event-meta{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:8px;
+      display:flex; flex-wrap:wrap; gap:8px;
+    }
+
+    .hidden{ display:none !important; }
+
+    /* Vis network container */
+    #network{
+      width:100%;
+      height:520px;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.02);
+    }
+
+    .footer-note{
+      color: var(--muted);
+      font-size:12px;
+      padding:10px 2px 18px;
+      text-align:center;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span style="font-size:18px">🍽️</span>
+        <span>ניהול ידע חברתי</span>
+        <span class="badge">לוקאלי • ללא ענן</span>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" id="btnBackup">גיבוי JSON</button>
+        <label class="btn secondary" style="display:inline-flex; align-items:center; gap:8px; margin:0; cursor:pointer;">
+          שחזור
+          <input id="restoreFile" type="file" accept="application/json" style="display:none;">
+        </label>
+        <button class="btn secondary" id="btnExportCSV">ייצוא CSV</button>
+        <button class="btn danger" id="btnReset">איפוס נתונים</button>
+      </div>
+    </div>
+  </div>
 
-<h1>ניהול ידע חברתי</h1>
+  <div class="container">
+    <div class="tabs" role="tablist">
+      <button class="tabbtn active" data-tab="tab-dashboard">Dashboard</button>
+      <button class="tabbtn" data-tab="tab-events">אירועים</button>
+      <button class="tabbtn" data-tab="tab-guests">אורחים</button>
+      <button class="tabbtn" data-tab="tab-network">מפת קשרים</button>
+      <button class="tabbtn" data-tab="tab-search">חיפוש</button>
+    </div>
 
-<div class="section">
-<h2>➕ הוספת אורח</h2>
-<input id="guestName" placeholder="שם">
-<button onclick="addGuest()">הוסף</button>
-<div id="guestList"></div>
-</div>
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="grid">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📅 אירוע חדש</div>
+            <div class="card-sub">תיעוד מהיר בדיעבד • תומך במאגר מנות</div>
+          </div>
+          <span class="pill" id="storagePill">💾 LocalStorage</span>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div>
+              <label>תאריך</label>
+              <input type="date" id="eventDate">
+            </div>
+            <div>
+              <label>סוג ארוחה</label>
+              <select id="mealType">
+                <option value="בשרי">בשרי</option>
+                <option value="חלבי">חלבי</option>
+                <option value="צמחוני">צמחוני</option>
+                <option value="אחר">אחר</option>
+              </select>
+            </div>
+          </div>
 
-<div class="section">
-<h2>📅 אירוע חדש</h2>
-<input type="date" id="eventDate">
-<select id="mealType">
-<option>בשרי</option>
-<option>חלבי</option>
-<option>צמחוני</option>
-<option>אחר</option>
-</select>
-<div id="guestCheckboxes"></div>
-<textarea id="menu" placeholder="תפריט"></textarea>
-<button onclick="addEvent()">שמור</button>
-</div>
+          <label>משתתפים</label>
+          <div id="guestCheckboxes" class="checkgrid"></div>
 
-<div class="section">
-<h2>📊 Dashboard</h2>
-<canvas id="mealChart"></canvas>
-</div>
+          <div class="row">
+            <div>
+              <label>מנות מהמאגר (בחירה מרובה)</label>
+              <select id="dishSelect" multiple style="min-height:120px;"></select>
+              <div class="card-sub" style="margin-top:8px;">טיפ: Ctrl/⌘ לבחירה מרובה</div>
+            </div>
+            <div>
+              <label>הוסף מנה חדשה למאגר</label>
+              <input id="newDishName" placeholder="למשל: לזניה / סלט יווני">
+              <label>תגית מנה</label>
+              <select id="newDishTag">
+                <option value="בשרי">בשרי</option>
+                <option value="חלבי">חלבי</option>
+                <option value="צמחוני">צמחוני</option>
+                <option value="אחר">אחר</option>
+              </select>
+              <button class="btn green" id="btnAddDish">הוסף מנה</button>
+            </div>
+          </div>
+
+          <label>תפריט (טקסט חופשי)</label>
+          <textarea id="menu" placeholder="כתוב מה היה לאכול + כל מה שחשוב לזכור..."></textarea>
+
+          <label>הערות</label>
+          <textarea id="notes" placeholder="דברים חברתיים / וייב / הערות כלליות..."></textarea>
+
+          <button class="btn" id="btnAddEvent">שמור אירוע</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📊 Dashboard</div>
+            <div class="card-sub">תובנות מיידיות + אירועים אחרונים</div>
+          </div>
+          <div class="pill" id="kpiWindowPill">⏱️ חלון: 365 ימים</div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div>
+              <label>חלון אנליטיקה (ימים)</label>
+              <input type="number" id="analyticsDays" min="7" max="3650" value="365">
+            </div>
+            <div style="display:flex; align-items:end; gap:10px;">
+              <button class="btn secondary" id="btnApplyWindow" style="width:100%;">החל</button>
+            </div>
+          </div>
+
+          <div class="kpi" style="margin-top:10px;">
+            <div class="kpi-card"><div class="k">אירועים</div><div class="v" id="kpiEvents">0</div></div>
+            <div class="kpi-card"><div class="k">אורחים</div><div class="v" id="kpiGuests">0</div></div>
+            <div class="kpi-card"><div class="k">ממוצע אורחים</div><div class="v" id="kpiAvgGuests">0</div></div>
+            <div class="kpi-card"><div class="k">מנות במאגר</div><div class="v" id="kpiDishes">0</div></div>
+          </div>
+
+          <div class="split" style="margin-top:14px;">
+            <div class="card" style="box-shadow:none;">
+              <div class="card-header" style="border-radius:16px 16px 0 0;">
+                <div class="card-title">התפלגות סוגי ארוחות</div>
+                <div class="card-sub">בחלון הנבחר</div>
+              </div>
+              <div class="card-body">
+                <canvas id="mealChart" height="180"></canvas>
+              </div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="card-header" style="border-radius:16px 16px 0 0;">
+                <div class="card-title">טופ אורחים</div>
+                <div class="card-sub">לפי תדירות</div>
+              </div>
+              <div class="card-body">
+                <canvas id="guestChart" height="180"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="split" style="margin-top:14px;">
+            <div class="card" style="box-shadow:none;">
+              <div class="card-header" style="border-radius:16px 16px 0 0;">
+                <div class="card-title">מנות פופולריות</div>
+                <div class="card-sub">מבוסס מאגר + בחירות באירועים</div>
+              </div>
+              <div class="card-body" id="popularDishes"></div>
+            </div>
+
+            <div class="card" style="box-shadow:none;">
+              <div class="card-header" style="border-radius:16px 16px 0 0;">
+                <div class="card-title">מי לא הוזמן הרבה זמן</div>
+                <div class="card-sub">סף ימים לבחירה</div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div>
+                    <label>סף ימים</label>
+                    <input type="number" id="staleDays" min="7" max="3650" value="60">
+                  </div>
+                  <div style="display:flex; align-items:end; gap:10px;">
+                    <button class="btn warn" id="btnRefreshStale" style="width:100%;">חשב</button>
+                  </div>
+                </div>
+                <div id="staleGuests" style="margin-top:10px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;">
+            <div class="card-header" style="border-radius:16px 16px 0 0;">
+              <div>
+                <div class="card-title">אירועים אחרונים</div>
+                <div class="card-sub">לחיצה תוביל ללשונית אירועים ותסנן</div>
+              </div>
+            </div>
+            <div class="card-body" id="recentEvents"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section id="tab-events" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📖 אירועים</div>
+            <div class="card-sub">סינון מהיר + עריכה/מחיקה</div>
+          </div>
+          <div class="pill" id="eventsCountPill">0 אירועים</div>
+        </div>
+        <div class="card-body">
+          <div class="row3">
+            <div>
+              <label>חיפוש מהיר</label>
+              <input id="eventsQuick" placeholder="שם / מנה / טקסט חופשי">
+            </div>
+            <div>
+              <label>סוג ארוחה</label>
+              <select id="eventsMeal">
+                <option value="">הכל</option>
+                <option value="בשרי">בשרי</option>
+                <option value="חלבי">חלבי</option>
+                <option value="צמחוני">צמחוני</option>
+                <option value="אחר">אחר</option>
+              </select>
+            </div>
+            <div>
+              <label>שנה</label>
+              <input id="eventsYear" type="number" placeholder="למשל 2025">
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <button class="btn secondary" id="btnClearEventsFilters">נקה סינון</button>
+          </div>
+          <div style="margin-top:14px;" id="eventsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GUESTS -->
+    <section id="tab-guests" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">👥 אורחים</div>
+              <div class="card-sub">פרופיל עם העדפות + כשרות + רגישויות</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <label>שם אורח</label>
+            <input id="guestName" placeholder="למשל: יואב">
+
+            <div class="row">
+              <div>
+                <label>יום הולדת</label>
+                <input id="guestBirthday" type="date">
+              </div>
+              <div>
+                <label>דירוג התאמה (1-5)</label>
+                <select id="guestRating">
+                  <option value="3">3</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </div>
+            </div>
+
+            <label>אלרגיות</label>
+            <input id="guestAllergies" placeholder="למשל: אגוזים, גלוטן">
+
+            <label>העדפות אוכל</label>
+            <input id="guestPrefs" placeholder="למשל: אוהב חריף, טבעוני">
+
+            <label>רמת כשרות</label>
+            <input id="guestKosher" placeholder="למשל: כשר / מהדרין / לא משנה">
+
+            <label>רגישויות חברתיות</label>
+            <textarea id="guestSocial" placeholder="דברים שחשוב לזכור חברתית..."></textarea>
+
+            <button class="btn" id="btnAddGuest">הוסף אורח</button>
+            <div class="card-sub" style="margin-top:10px;">טיפ: לחץ על אורח מהרשימה כדי לערוך או למחוק.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📇 רשימת אורחים</div>
+              <div class="card-sub">תדירות + ביקור אחרון + יום הולדת קרוב</div>
+            </div>
+            <div class="pill" id="guestsCountPill">0 אורחים</div>
+          </div>
+          <div class="card-body">
+            <div id="guestsChips" class="guest-list"></div>
+            <div style="margin-top:14px;">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>אורח</th>
+                    <th>ביקורים</th>
+                    <th>ביקור אחרון</th>
+                    <th>ימים</th>
+                  </tr>
+                </thead>
+                <tbody id="guestStatsTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Guest editor modal (simple) -->
+      <div class="card" id="guestEditor" style="margin-top:14px;">
+        <div class="card-header">
+          <div>
+            <div class="card-title">✏️ עריכת אורח</div>
+            <div class="card-sub">שינויים נשמרים לוקאלית בלבד</div>
+          </div>
+          <button class="btn secondary" id="btnCloseGuestEditor">סגור</button>
+        </div>
+        <div class="card-body" id="guestEditorBody">
+          <div class="card-sub">בחר אורח מהרשימה כדי לערוך.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NETWORK -->
+    <section id="tab-network" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🌐 מפת קשרים חברתית</div>
+            <div class="card-sub">עובי קו = מספר פעמים יחד • אפשר לגרור/לזום/ללחוץ</div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" id="btnFitNetwork">התאם למסך</button>
+            <button class="btn secondary" id="btnRebuildNetwork">רענן</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div>
+              <label>סף קו מינימלי (כמה פעמים יחד)</label>
+              <input type="number" id="minCo" min="1" max="50" value="1">
+            </div>
+            <div>
+              <label>הדגשת טופ זוגות (מספר)</label>
+              <input type="number" id="topPairs" min="3" max="50" value="12">
+            </div>
+          </div>
+          <div style="margin-top:12px" id="network"></div>
+
+          <div style="margin-top:14px">
+            <div class="card-header" style="border-radius:16px 16px 0 0;">
+              <div>
+                <div class="card-title">🤝 מי היה עם מי (טופ)</div>
+                <div class="card-sub">לפי מספר אירועים משותפים</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <table class="table">
+                <thead><tr><th>זוג</th><th>פעמים יחד</th></tr></thead>
+                <tbody id="pairsTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="tab-search" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🔍 חיפוש חכם</div>
+            <div class="card-sub">תומך: סוג ארוחה, שנים, תאריכים, אורחים, מנות, טקסט חופשי</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <label>שאילתא</label>
+          <input id="searchInput" placeholder='דוגמאות: "יואב בשרי 2025" • "אחרי:2025-01-01 חלבי" • "מנה:לזניה" • "לפני:2024-12-31"'>
+          <div class="row">
+            <button class="btn" id="btnSearch">חפש</button>
+            <button class="btn secondary" id="btnClearSearch">נקה</button>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div class="pill" id="searchSummary">לא בוצע חיפוש</div>
+          </div>
+
+          <div style="margin-top:14px;" id="searchResults"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      💡 הכל נשמר בדפדפן (LocalStorage). מומלץ לבצע גיבוי מדי פעם.
+    </div>
+  </div>
 
 <script>
-let guests = JSON.parse(localStorage.getItem("guests")) || [];
-let events = JSON.parse(localStorage.getItem("events")) || [];
+/* =========================
+   Storage + Data Model
+========================= */
+const STORAGE_KEY = "hosting_v2";
+const DEFAULT_STATE = { guests: [], events: [], dishes: [] };
 
-function save(){
- localStorage.setItem("guests",JSON.stringify(guests));
- localStorage.setItem("events",JSON.stringify(events));
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(DEFAULT_STATE);
+    const st = JSON.parse(raw);
+    // Backward compat: if old keys exist
+    if(!st.guests && localStorage.getItem("guests")){
+      return {
+        guests: JSON.parse(localStorage.getItem("guests")||"[]"),
+        events: JSON.parse(localStorage.getItem("events")||"[]"),
+        dishes: []
+      };
+    }
+    return { ...DEFAULT_STATE, ...st };
+  }catch(e){
+    console.warn("Failed to load state", e);
+    return structuredClone(DEFAULT_STATE);
+  }
+}
+let state = loadState();
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function addGuest(){
- let name=document.getElementById("guestName").value.trim();
- if(!name)return;
- guests.push({id:Date.now(),name});
- document.getElementById("guestName").value="";
- save(); render();
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 }
 
-function addEvent(){
- let date=document.getElementById("eventDate").value;
- let meal=document.getElementById("mealType").value;
- let menu=document.getElementById("menu").value;
- let selected=[...document.querySelectorAll("input[name=guest]:checked")].map(c=>parseInt(c.value));
- if(!date||selected.length===0)return;
- events.push({id:Date.now(),date,meal,menu,guests:selected});
- save(); render();
+/* =========================
+   Helpers
+========================= */
+function fmtDate(d){
+  if(!d) return "";
+  return d;
+}
+function parseISO(d){
+  const t = Date.parse(d);
+  return isNaN(t) ? null : new Date(t);
+}
+function daysBetween(a, b){
+  const ms = 1000*60*60*24;
+  return Math.floor((b.getTime() - a.getTime())/ms);
+}
+function nowDateISO(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function safeText(x){ return (x ?? "").toString(); }
+
+function mealEmoji(meal){
+  if(meal==="בשרי") return "🥩";
+  if(meal==="חלבי") return "🧀";
+  if(meal==="צמחוני") return "🥗";
+  return "🍽️";
 }
 
+/* =========================
+   Tabs
+========================= */
+const tabButtons = [...document.querySelectorAll(".tabbtn")];
+const tabs = [...document.querySelectorAll("section[id^='tab-']")];
+
+function openTab(id){
+  tabs.forEach(t => t.classList.toggle("hidden", t.id !== id));
+  tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+}
+tabButtons.forEach(b => b.addEventListener("click", () => openTab(b.dataset.tab)));
+
+/* =========================
+   Guests CRUD
+========================= */
+const guestName = document.getElementById("guestName");
+const guestBirthday = document.getElementById("guestBirthday");
+const guestRating = document.getElementById("guestRating");
+const guestAllergies = document.getElementById("guestAllergies");
+const guestPrefs = document.getElementById("guestPrefs");
+const guestKosher = document.getElementById("guestKosher");
+const guestSocial = document.getElementById("guestSocial");
+const btnAddGuest = document.getElementById("btnAddGuest");
+
+let editingGuestId = null;
+
+btnAddGuest.addEventListener("click", () => {
+  const name = guestName.value.trim();
+  if(!name) return toast("צריך שם אורח");
+  const g = {
+    id: uid(),
+    name,
+    birthday: guestBirthday.value || "",
+    rating: parseInt(guestRating.value || "3", 10),
+    allergies: guestAllergies.value.trim(),
+    prefs: guestPrefs.value.trim(),
+    kosher: guestKosher.value.trim(),
+    social: guestSocial.value.trim(),
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  state.guests.push(g);
+  saveState();
+  clearGuestForm();
+  renderAll();
+  toast("אורח נוסף");
+  openTab("tab-guests");
+});
+
+function clearGuestForm(){
+  guestName.value="";
+  guestBirthday.value="";
+  guestRating.value="3";
+  guestAllergies.value="";
+  guestPrefs.value="";
+  guestKosher.value="";
+  guestSocial.value="";
+}
+
+function getGuest(id){ return state.guests.find(g => g.id === id); }
+function guestNameById(id){ return getGuest(id)?.name || "אורח (נמחק)"; }
+
+/* =========================
+   Dishes
+========================= */
+const dishSelect = document.getElementById("dishSelect");
+const newDishName = document.getElementById("newDishName");
+const newDishTag = document.getElementById("newDishTag");
+document.getElementById("btnAddDish").addEventListener("click", () => {
+  const name = newDishName.value.trim();
+  if(!name) return toast("צריך שם מנה");
+  state.dishes.push({ id: uid(), name, tag: newDishTag.value, createdAt: Date.now() });
+  newDishName.value="";
+  saveState();
+  renderDishes();
+  toast("מנה נוספה למאגר");
+});
+
+function renderDishes(){
+  dishSelect.innerHTML = state.dishes
+    .slice()
+    .sort((a,b) => a.name.localeCompare(b.name, "he"))
+    .map(d => `<option value="${d.id}">${mealEmoji(d.tag)} ${escapeHtml(d.name)}</option>`)
+    .join("");
+}
+
+/* =========================
+   Events CRUD
+========================= */
+const eventDate = document.getElementById("eventDate");
+const mealType = document.getElementById("mealType");
+const menu = document.getElementById("menu");
+const notes = document.getElementById("notes");
+const btnAddEvent = document.getElementById("btnAddEvent");
+
+btnAddEvent.addEventListener("click", () => {
+  const date = eventDate.value;
+  if(!date) return toast("צריך תאריך");
+  const selectedGuests = [...document.querySelectorAll("input[name='guest']:checked")].map(i => i.value);
+  if(selectedGuests.length === 0) return toast("צריך לבחור לפחות אורח אחד");
+  const selectedDishes = [...dishSelect.selectedOptions].map(o => o.value);
+
+  const ev = {
+    id: uid(),
+    date,
+    meal: mealType.value,
+    guests: selectedGuests,
+    dishes: selectedDishes,
+    menu: menu.value.trim(),
+    notes: notes.value.trim(),
+    createdAt: Date.now(),
+    updatedAt: Date.now()
+  };
+  state.events.push(ev);
+  saveState();
+  menu.value=""; notes.value="";
+  // clear checks
+  document.querySelectorAll("input[name='guest']").forEach(x => x.checked=false);
+  dishSelect.selectedIndex = -1;
+  renderAll();
+  toast("אירוע נשמר");
+});
+
+function deleteEvent(id){
+  if(!confirm("למחוק אירוע?")) return;
+  state.events = state.events.filter(e => e.id !== id);
+  saveState();
+  renderAll();
+  toast("נמחק");
+}
+
+function updateEvent(id, patch){
+  const idx = state.events.findIndex(e => e.id === id);
+  if(idx < 0) return;
+  state.events[idx] = { ...state.events[idx], ...patch, updatedAt: Date.now() };
+  saveState();
+  renderAll();
+  toast("עודכן");
+}
+
+/* =========================
+   Rendering - Guests Checkboxes
+========================= */
+function renderGuestCheckboxes(){
+  const el = document.getElementById("guestCheckboxes");
+  const stats = computeGuestStats();
+  el.innerHTML = state.guests
+    .slice()
+    .sort((a,b) => a.name.localeCompare(b.name, "he"))
+    .map(g => {
+      const s = stats.byGuest[g.id] || { count:0, last:null, days:null };
+      const lastTxt = s.last ? `${s.last} (${s.days} ימים)` : "מעולם לא";
+      return `
+        <label class="check">
+          <input type="checkbox" name="guest" value="${g.id}">
+          <div class="meta">
+            <b>${escapeHtml(g.name)}</b>
+            <span>${s.count} ביקורים • אחרון: ${escapeHtml(lastTxt)}</span>
+          </div>
+        </label>
+      `;
+    }).join("");
+}
+
+/* =========================
+   Analytics Computations
+========================= */
+function computeWindowedEvents(days){
+  const end = new Date();
+  const start = new Date(end.getTime() - days*24*60*60*1000);
+  return state.events.filter(e => {
+    const d = parseISO(e.date);
+    return d && d >= start && d <= end;
+  });
+}
+
+function computeGuestStats(){
+  // across all events (not windowed)
+  const byGuest = {};
+  state.guests.forEach(g => byGuest[g.id] = { count:0, last:null, days:null });
+
+  const now = new Date();
+  state.events.forEach(e => {
+    e.guests.forEach(gid => {
+      if(!byGuest[gid]) byGuest[gid] = { count:0, last:null, days:null };
+      byGuest[gid].count += 1;
+      if(!byGuest[gid].last || e.date > byGuest[gid].last) byGuest[gid].last = e.date;
+    });
+  });
+
+  Object.keys(byGuest).forEach(gid => {
+    const last = byGuest[gid].last;
+    byGuest[gid].days = last ? Math.max(0, daysBetween(parseISO(last), now)) : null;
+  });
+
+  return { byGuest };
+}
+
+function computePairs(){
+  const map = new Map(); // key -> count
+  for(const e of state.events){
+    const gs = [...new Set(e.guests)].sort();
+    for(let i=0;i<gs.length;i++){
+      for(let j=i+1;j<gs.length;j++){
+        const key = `${gs[i]}|${gs[j]}`;
+        map.set(key, (map.get(key)||0)+1);
+      }
+    }
+  }
+  // array
+  const arr = [...map.entries()].map(([k,v]) => {
+    const [a,b]=k.split("|");
+    return { a, b, count:v };
+  }).sort((x,y)=>y.count-x.count);
+  return arr;
+}
+
+function computeDishPopularity(windowedEvents){
+  // popularity based on dishes selection in events (windowed)
+  const counts = new Map(); // dishId -> count
+  for(const e of windowedEvents){
+    (e.dishes||[]).forEach(did => counts.set(did, (counts.get(did)||0)+1));
+  }
+  const arr = [...counts.entries()].map(([id,count]) => {
+    const d = state.dishes.find(x => x.id === id);
+    return { id, name: d?.name || "מנה (נמחקה)", tag: d?.tag || "אחר", count };
+  }).sort((a,b)=>b.count-a.count);
+  return arr;
+}
+
+function guestsNotSeen(thresholdDays){
+  const stats = computeGuestStats().byGuest;
+  const res = state.guests.map(g => {
+    const s = stats[g.id] || { count:0, last:null, days:null };
+    const days = s.last ? s.days : Infinity;
+    return { guest:g, last:s.last, days, count:s.count };
+  }).filter(x => x.days >= thresholdDays).sort((a,b)=>b.days-a.days);
+  return res;
+}
+
+/* =========================
+   Dashboard Charts
+========================= */
+let mealChartInstance = null;
+let guestChartInstance = null;
+
+function buildDashboard(days){
+  const windowed = computeWindowedEvents(days);
+  document.getElementById("kpiWindowPill").textContent = `⏱️ חלון: ${days} ימים`;
+
+  // KPIs
+  document.getElementById("kpiEvents").textContent = windowed.length;
+  document.getElementById("kpiGuests").textContent = state.guests.length;
+  const avgGuests = windowed.length ? (windowed.reduce((a,e)=>a+(e.guests?.length||0),0)/windowed.length) : 0;
+  document.getElementById("kpiAvgGuests").textContent = avgGuests ? avgGuests.toFixed(1) : "0";
+  document.getElementById("kpiDishes").textContent = state.dishes.length;
+
+  // Meal distribution
+  const mealCount = {};
+  for(const e of windowed){
+    mealCount[e.meal] = (mealCount[e.meal] || 0) + 1;
+  }
+  const mealLabels = Object.keys(mealCount);
+  const mealValues = mealLabels.map(k => mealCount[k]);
+
+  if(mealChartInstance) mealChartInstance.destroy();
+  mealChartInstance = new Chart(document.getElementById("mealChart"), {
+    type:"bar",
+    data:{ labels: mealLabels, datasets:[{ label:"אירועים", data: mealValues }] },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{ color:"#a9b7d7" }, grid:{ color:"rgba(255,255,255,.06)"} },
+              y:{ ticks:{ color:"#a9b7d7" }, grid:{ color:"rgba(255,255,255,.06)"} } }
+    }
+  });
+
+  // Top guests
+  const guestCount = new Map();
+  for(const e of windowed){
+    for(const gid of (e.guests||[])){
+      guestCount.set(gid, (guestCount.get(gid)||0)+1);
+    }
+  }
+  const top = [...guestCount.entries()]
+    .map(([gid,count]) => ({ gid, name: guestNameById(gid), count }))
+    .sort((a,b)=>b.count-a.count)
+    .slice(0, 10);
+
+  if(guestChartInstance) guestChartInstance.destroy();
+  guestChartInstance = new Chart(document.getElementById("guestChart"), {
+    type:"bar",
+    data:{ labels: top.map(x=>x.name), datasets:[{ label:"ביקורים", data: top.map(x=>x.count) }] },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ ticks:{ color:"#a9b7d7" }, grid:{ color:"rgba(255,255,255,.06)"} },
+              y:{ ticks:{ color:"#a9b7d7" }, grid:{ color:"rgba(255,255,255,.06)"} } }
+    }
+  });
+
+  // Popular dishes
+  const pops = computeDishPopularity(windowed).slice(0, 10);
+  const popEl = document.getElementById("popularDishes");
+  if(pops.length===0){
+    popEl.innerHTML = `<div class="card-sub">אין עדיין מספיק נתונים (בחר מנות מהמאגר באירועים)</div>`;
+  } else {
+    popEl.innerHTML = pops.map(p => `<div class="pill" style="margin:6px 6px 0 0;">${mealEmoji(p.tag)} ${escapeHtml(p.name)} • ${p.count}</div>`).join("");
+  }
+
+  // Recent events
+  const recent = state.events.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,6);
+  const recentEl = document.getElementById("recentEvents");
+  if(recent.length===0){
+    recentEl.innerHTML = `<div class="card-sub">אין אירועים עדיין</div>`;
+  } else {
+    recentEl.innerHTML = recent.map(e => {
+      const names = (e.guests||[]).map(guestNameById).join(", ");
+      return `
+        <div class="event-card" style="cursor:pointer;" data-recent="${e.id}">
+          <div class="event-head">
+            <b>${mealEmoji(e.meal)} ${escapeHtml(e.meal)} • ${escapeHtml(e.date)}</b>
+            <span>${(e.guests||[]).length} אורחים</span>
+          </div>
+          <div class="card-sub">${escapeHtml(names)}</div>
+          <div class="event-meta">
+            ${(e.dishes||[]).slice(0,4).map(did => {
+              const d = state.dishes.find(x=>x.id===did);
+              return `<span class="pill">${mealEmoji(d?.tag||"אחר")} ${escapeHtml(d?.name||"מנה")}</span>`;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
+    recentEl.querySelectorAll("[data-recent]").forEach(div => {
+      div.addEventListener("click", () => {
+        openTab("tab-events");
+        document.getElementById("eventsQuick").value = div.getAttribute("data-recent"); // will match by id in quick filter
+        renderEventsList();
+      });
+    });
+  }
+
+  // stale guests (optional compute on refresh button)
+}
+
+/* =========================
+   Stale Guests Panel
+========================= */
+document.getElementById("btnRefreshStale").addEventListener("click", () => {
+  const th = parseInt(document.getElementById("staleDays").value || "60", 10);
+  const res = guestsNotSeen(th);
+  const el = document.getElementById("staleGuests");
+  if(res.length===0){
+    el.innerHTML = `<div class="card-sub">אין אורחים מעל הסף (${th} ימים)</div>`;
+    return;
+  }
+  el.innerHTML = res.slice(0, 20).map(x => {
+    const last = x.last ? x.last : "מעולם לא";
+    const days = x.last ? x.days : "∞";
+    return `<div class="pill" style="margin:6px 6px 0 0;">${escapeHtml(x.guest.name)} • אחרון: ${escapeHtml(last)} • ${days} ימים</div>`;
+  }).join("");
+});
+
+/* =========================
+   Events Listing + Filters
+========================= */
+const eventsQuick = document.getElementById("eventsQuick");
+const eventsMeal = document.getElementById("eventsMeal");
+const eventsYear = document.getElementById("eventsYear");
+document.getElementById("btnClearEventsFilters").addEventListener("click", () => {
+  eventsQuick.value="";
+  eventsMeal.value="";
+  eventsYear.value="";
+  renderEventsList();
+});
+eventsQuick.addEventListener("input", renderEventsList);
+eventsMeal.addEventListener("change", renderEventsList);
+eventsYear.addEventListener("input", renderEventsList);
+
+function eventMatchesQuick(e, q){
+  if(!q) return true;
+  const qq = q.trim().toLowerCase();
+
+  // allow paste id from recent (exact)
+  if(e.id.toLowerCase() === qq) return true;
+
+  const guestNames = (e.guests||[]).map(guestNameById).join(" ").toLowerCase();
+  const dishNames = (e.dishes||[]).map(did => (state.dishes.find(x=>x.id===did)?.name||"")).join(" ").toLowerCase();
+  const blob = [e.date, e.meal, e.menu, e.notes, guestNames, dishNames].join(" ").toLowerCase();
+  return blob.includes(qq);
+}
+
+function renderEventsList(){
+  const q = eventsQuick.value;
+  const meal = eventsMeal.value;
+  const year = eventsYear.value ? String(eventsYear.value).trim() : "";
+
+  let list = state.events.slice().sort((a,b)=>b.date.localeCompare(a.date));
+
+  list = list.filter(e => eventMatchesQuick(e, q));
+  if(meal) list = list.filter(e => e.meal === meal);
+  if(year) list = list.filter(e => (e.date||"").startsWith(year+"-"));
+
+  document.getElementById("eventsCountPill").textContent = `${list.length} אירועים`;
+
+  const el = document.getElementById("eventsList");
+  if(list.length===0){
+    el.innerHTML = `<div class="card-sub">אין תוצאות</div>`;
+    return;
+  }
+  el.innerHTML = list.map(e => renderEventCard(e)).join("");
+  el.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => deleteEvent(b.dataset.del)));
+  el.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => openEventEditor(b.dataset.edit)));
+}
+
+function renderEventCard(e){
+  const names = (e.guests||[]).map(guestNameById).join(", ");
+  const dishes = (e.dishes||[]).map(did => {
+    const d = state.dishes.find(x=>x.id===did);
+    return d ? `<span class="pill">${mealEmoji(d.tag)} ${escapeHtml(d.name)}</span>` : "";
+  }).filter(Boolean).join(" ");
+
+  return `
+    <div class="event-card">
+      <div class="event-head">
+        <b>${mealEmoji(e.meal)} ${escapeHtml(e.meal)} • ${escapeHtml(e.date)}</b>
+        <span>${(e.guests||[]).length} אורחים</span>
+      </div>
+      <div class="card-sub">${escapeHtml(names)}</div>
+      ${dishes ? `<div class="event-meta" style="margin-top:10px;">${dishes}</div>` : ""}
+      ${e.menu ? `<div class="event-meta"><span>${escapeHtml(e.menu)}</span></div>` : ""}
+      ${e.notes ? `<div class="event-meta"><span>📝 ${escapeHtml(e.notes)}</span></div>` : ""}
+      <div class="event-meta" style="justify-content:space-between; width:100%;">
+        <span class="pill">id: ${escapeHtml(e.id)}</span>
+        <span style="display:flex; gap:8px;">
+          <button class="btn secondary" data-edit="${e.id}" style="padding:8px 10px;">ערוך</button>
+          <button class="btn danger" data-del="${e.id}" style="padding:8px 10px;">מחק</button>
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+/* Simple inline editor */
+function openEventEditor(eventId){
+  const e = state.events.find(x => x.id === eventId);
+  if(!e) return;
+
+  const html = `
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header">
+        <div>
+          <div class="card-title">✏️ עריכת אירוע</div>
+          <div class="card-sub">${escapeHtml(e.id)}</div>
+        </div>
+        <button class="btn secondary" id="btnCloseEventEdit">סגור</button>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div>
+            <label>תאריך</label>
+            <input type="date" id="editDate" value="${escapeAttr(e.date)}">
+          </div>
+          <div>
+            <label>סוג ארוחה</label>
+            <select id="editMeal">
+              ${["בשרי","חלבי","צמחוני","אחר"].map(m => `<option ${m===e.meal?"selected":""}>${m}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <label>משתתפים</label>
+        <div class="checkgrid" id="editGuests">
+          ${state.guests.slice().sort((a,b)=>a.name.localeCompare(b.name,"he")).map(g => `
+            <label class="check">
+              <input type="checkbox" value="${g.id}" ${e.guests.includes(g.id)?"checked":""}>
+              <div class="meta"><b>${escapeHtml(g.name)}</b><span>פרופיל</span></div>
+            </label>
+          `).join("")}
+        </div>
+
+        <label>מנות</label>
+        <select id="editDishes" multiple style="min-height:120px;">
+          ${state.dishes.slice().sort((a,b)=>a.name.localeCompare(b.name,"he")).map(d => `
+            <option value="${d.id}" ${e.dishes.includes(d.id)?"selected":""}>${mealEmoji(d.tag)} ${escapeHtml(d.name)}</option>
+          `).join("")}
+        </select>
+
+        <label>תפריט</label>
+        <textarea id="editMenu">${escapeHtml(e.menu||"")}</textarea>
+
+        <label>הערות</label>
+        <textarea id="editNotes">${escapeHtml(e.notes||"")}</textarea>
+
+        <div class="row">
+          <button class="btn" id="btnSaveEventEdit">שמור</button>
+          <button class="btn secondary" id="btnCancelEventEdit">בטל</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Insert editor on top of list
+  const listEl = document.getElementById("eventsList");
+  listEl.insertAdjacentHTML("afterbegin", html);
+
+  const close = () => {
+    const card = listEl.querySelector(".card");
+    if(card) card.remove();
+  };
+
+  listEl.querySelector("#btnCloseEventEdit").addEventListener("click", close);
+  listEl.querySelector("#btnCancelEventEdit").addEventListener("click", close);
+  listEl.querySelector("#btnSaveEventEdit").addEventListener("click", () => {
+    const date = listEl.querySelector("#editDate").value;
+    const meal = listEl.querySelector("#editMeal").value;
+    const guests = [...listEl.querySelectorAll("#editGuests input[type='checkbox']:checked")].map(x => x.value);
+    const dishes = [...listEl.querySelectorAll("#editDishes option:checked")].map(o => o.value);
+    const menuTxt = listEl.querySelector("#editMenu").value.trim();
+    const notesTxt = listEl.querySelector("#editNotes").value.trim();
+
+    if(!date) return toast("צריך תאריך");
+    if(guests.length===0) return toast("צריך לבחור אורחים");
+    updateEvent(eventId, { date, meal, guests, dishes, menu: menuTxt, notes: notesTxt });
+    close();
+  });
+}
+
+/* =========================
+   Guests list + Editor
+========================= */
 function renderGuests(){
- document.getElementById("guestList").innerHTML=guests.map(g=>g.name).join("<br>");
- document.getElementById("guestCheckboxes").innerHTML=guests.map(g=>
- `<label><input type=checkbox name=guest value=${g.id}> ${g.name}</label><br>`
- ).join("");
+  const chips = document.getElementById("guestsChips");
+  document.getElementById("guestsCountPill").textContent = `${state.guests.length} אורחים`;
+
+  const stats = computeGuestStats().byGuest;
+
+  chips.innerHTML = state.guests
+    .slice()
+    .sort((a,b)=>a.name.localeCompare(b.name,"he"))
+    .map(g => {
+      const s = stats[g.id] || { count:0, last:null, days:null };
+      const last = s.last ? s.last : "מעולם לא";
+      const days = s.last ? `${s.days} ימים` : "";
+      return `<div class="guest-chip" data-guest="${g.id}">
+        <span>${escapeHtml(g.name)}</span>
+        <small>${s.count} • ${escapeHtml(last)} ${escapeHtml(days)}</small>
+      </div>`;
+    }).join("");
+
+  chips.querySelectorAll("[data-guest]").forEach(el => {
+    el.addEventListener("click", () => openGuestEditor(el.dataset.guest));
+  });
+
+  // table
+  const tbody = document.getElementById("guestStatsTable");
+  const rows = state.guests.map(g => {
+    const s = stats[g.id] || { count:0, last:null, days:null };
+    return { name:g.name, count:s.count, last:s.last||"מעולם לא", days: s.last ? s.days : "" };
+  }).sort((a,b)=>b.count-a.count);
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${r.count}</td>
+      <td>${escapeHtml(r.last)}</td>
+      <td>${escapeHtml(String(r.days))}</td>
+    </tr>
+  `).join("");
 }
 
-function buildChart(){
- let mealCount={};
- events.forEach(e=>mealCount[e.meal]=(mealCount[e.meal]||0)+1);
- new Chart(document.getElementById("mealChart"),{
- type:'bar',
- data:{labels:Object.keys(mealCount),
- datasets:[{label:"סוגי ארוחות",data:Object.values(mealCount)}]}
- });
+function openGuestEditor(id){
+  const g = getGuest(id);
+  if(!g) return;
+  editingGuestId = id;
+
+  const body = document.getElementById("guestEditorBody");
+  body.innerHTML = `
+    <div class="row">
+      <div>
+        <label>שם</label>
+        <input id="egName" value="${escapeAttr(g.name)}">
+      </div>
+      <div>
+        <label>דירוג התאמה (1-5)</label>
+        <select id="egRating">
+          ${[1,2,3,4,5].map(n => `<option value="${n}" ${n===g.rating?"selected":""}>${n}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>יום הולדת</label>
+        <input id="egBirthday" type="date" value="${escapeAttr(g.birthday||"")}">
+      </div>
+      <div>
+        <label>רמת כשרות</label>
+        <input id="egKosher" value="${escapeAttr(g.kosher||"")}">
+      </div>
+    </div>
+    <label>אלרגיות</label>
+    <input id="egAllergies" value="${escapeAttr(g.allergies||"")}">
+    <label>העדפות אוכל</label>
+    <input id="egPrefs" value="${escapeAttr(g.prefs||"")}">
+    <label>רגישויות חברתיות</label>
+    <textarea id="egSocial">${escapeHtml(g.social||"")}</textarea>
+
+    <div class="row">
+      <button class="btn" id="btnSaveGuest">שמור</button>
+      <button class="btn danger" id="btnDeleteGuest">מחק אורח</button>
+    </div>
+
+    <div class="card-sub" style="margin-top:10px;">
+      ⚠ מחיקת אורח לא מוחקת אירועים היסטוריים – רק מסירה את הפרופיל. באירועים הוא יופיע כ"אורח (נמחק)".
+    </div>
+  `;
+
+  body.querySelector("#btnSaveGuest").addEventListener("click", () => {
+    const patch = {
+      name: body.querySelector("#egName").value.trim() || g.name,
+      rating: parseInt(body.querySelector("#egRating").value, 10),
+      birthday: body.querySelector("#egBirthday").value || "",
+      kosher: body.querySelector("#egKosher").value.trim(),
+      allergies: body.querySelector("#egAllergies").value.trim(),
+      prefs: body.querySelector("#egPrefs").value.trim(),
+      social: body.querySelector("#egSocial").value.trim(),
+      updatedAt: Date.now()
+    };
+    const idx = state.guests.findIndex(x => x.id === id);
+    if(idx >= 0){
+      state.guests[idx] = { ...state.guests[idx], ...patch };
+      saveState();
+      renderAll();
+      toast("אורח עודכן");
+    }
+  });
+
+  body.querySelector("#btnDeleteGuest").addEventListener("click", () => {
+    if(!confirm("למחוק אורח?")) return;
+    state.guests = state.guests.filter(x => x.id !== id);
+    // Keep events as-is (historical)
+    saveState();
+    renderAll();
+    toast("אורח נמחק");
+  });
 }
 
-function render(){
- renderGuests();
- if(events.length>0) buildChart();
+document.getElementById("btnCloseGuestEditor").addEventListener("click", () => {
+  document.getElementById("guestEditorBody").innerHTML = `<div class="card-sub">בחר אורח מהרשימה כדי לערוך.</div>`;
+  editingGuestId = null;
+});
+
+/* =========================
+   Network Graph (vis-network)
+========================= */
+let network = null;
+
+function buildNetwork(){
+  const minCo = parseInt(document.getElementById("minCo").value || "1", 10);
+  const topPairs = parseInt(document.getElementById("topPairs").value || "12", 10);
+  const pairs = computePairs().filter(p => p.count >= minCo);
+
+  // nodes
+  const nodes = state.guests.map(g => ({
+    id: g.id,
+    label: g.name,
+    value: Math.max(1, computeGuestStats().byGuest[g.id]?.count || 1),
+    title: `${g.name}\nדירוג: ${g.rating || 3}`
+  }));
+
+  // edges
+  const edges = pairs.map(p => ({
+    from: p.a,
+    to: p.b,
+    value: p.count,
+    width: Math.min(10, 1 + p.count),
+    title: `${guestNameById(p.a)} + ${guestNameById(p.b)}: ${p.count}`
+  }));
+
+  // render pairs table (top)
+  const top = pairs.slice().sort((a,b)=>b.count-a.count).slice(0, topPairs);
+  document.getElementById("pairsTable").innerHTML = top.map(p => `
+    <tr>
+      <td>${escapeHtml(guestNameById(p.a))} • ${escapeHtml(guestNameById(p.b))}</td>
+      <td>${p.count}</td>
+    </tr>
+  `).join("") || `<tr><td colspan="2">אין מספיק נתונים</td></tr>`;
+
+  const container = document.getElementById("network");
+  const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+  const options = {
+    autoResize: true,
+    interaction: { hover: true, navigationButtons: true, keyboard: true },
+    physics: { stabilization: true },
+    nodes: {
+      shape: "dot",
+      color: {
+        background: "rgba(37,99,235,.95)",
+        border: "rgba(255,255,255,.25)",
+        highlight: { background: "rgba(34,197,94,.95)", border: "rgba(255,255,255,.5)" }
+      },
+      font: { color: "#e8eefc", size: 16, face: "system-ui" },
+      borderWidth: 1
+    },
+    edges: {
+      color: { color: "rgba(255,255,255,.25)", highlight: "rgba(245,158,11,.9)" },
+      smooth: { type: "dynamic" },
+      font: { color: "#a9b7d7", size: 12 }
+    }
+  };
+
+  if(network){
+    network.setData(data);
+  } else {
+    network = new vis.Network(container, data, options);
+    network.on("selectNode", params => {
+      const gid = params.nodes[0];
+      openTab("tab-events");
+      // filter events containing this guest
+      document.getElementById("eventsQuick").value = guestNameById(gid);
+      renderEventsList();
+    });
+  }
 }
 
-render();
+document.getElementById("btnRebuildNetwork").addEventListener("click", () => buildNetwork());
+document.getElementById("btnFitNetwork").addEventListener("click", () => network && network.fit({ animation:true }));
+document.getElementById("minCo").addEventListener("input", () => buildNetwork());
+document.getElementById("topPairs").addEventListener("input", () => buildNetwork());
 
+/* =========================
+   Smart Search
+========================= */
+const searchInput = document.getElementById("searchInput");
+const searchSummary = document.getElementById("searchSummary");
+const searchResults = document.getElementById("searchResults");
+
+document.getElementById("btnSearch").addEventListener("click", runSmartSearch);
+document.getElementById("btnClearSearch").addEventListener("click", () => {
+  searchInput.value="";
+  searchSummary.textContent = "נוקה";
+  searchResults.innerHTML = "";
+});
+
+function parseQuery(q){
+  // supported tokens:
+  // אחרי:YYYY-MM-DD, לפני:YYYY-MM-DD
+  // שנה:YYYY or plain YYYY
+  // סוג ארוחה: בשרי/חלבי/צמחוני/אחר
+  // אורח:שם (optional), מנה:שם (optional)
+  // anything else: free text
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const out = { after:null, before:null, year:null, meal:null, guest:null, dish:null, text:[] };
+
+  const mealSet = new Set(["בשרי","חלבי","צמחוני","אחר"]);
+
+  for(const t of tokens){
+    const m = t.trim();
+    if(!m) continue;
+
+    if(m.startsWith("אחרי:")){
+      const v = m.slice("אחרי:".length);
+      if(parseISO(v)) out.after = v;
+      continue;
+    }
+    if(m.startsWith("לפני:")){
+      const v = m.slice("לפני:".length);
+      if(parseISO(v)) out.before = v;
+      continue;
+    }
+    if(m.startsWith("שנה:")){
+      const v = m.slice("שנה:".length);
+      if(/^\d{4}$/.test(v)) out.year = v;
+      continue;
+    }
+    if(m.startsWith("אורח:")){
+      const v = m.slice("אורח:".length);
+      if(v) out.guest = v;
+      continue;
+    }
+    if(m.startsWith("מנה:")){
+      const v = m.slice("מנה:".length);
+      if(v) out.dish = v;
+      continue;
+    }
+    if(mealSet.has(m)){
+      out.meal = m;
+      continue;
+    }
+    if(/^\d{4}$/.test(m)){
+      out.year = m;
+      continue;
+    }
+    out.text.push(m);
+  }
+  return out;
+}
+
+function runSmartSearch(){
+  const q = searchInput.value.trim();
+  if(!q) return toast("כתוב שאילתא");
+  const parsed = parseQuery(q);
+
+  const summaryParts = [];
+  if(parsed.meal) summaryParts.push(`סוג=${parsed.meal}`);
+  if(parsed.year) summaryParts.push(`שנה=${parsed.year}`);
+  if(parsed.after) summaryParts.push(`אחרי=${parsed.after}`);
+  if(parsed.before) summaryParts.push(`לפני=${parsed.before}`);
+  if(parsed.guest) summaryParts.push(`אורח~${parsed.guest}`);
+  if(parsed.dish) summaryParts.push(`מנה~${parsed.dish}`);
+  if(parsed.text.length) summaryParts.push(`טקסט~${parsed.text.join(" ")}`);
+  searchSummary.textContent = summaryParts.length ? ("פילטרים: " + summaryParts.join(" • ")) : "חיפוש";
+
+  let res = state.events.slice();
+
+  if(parsed.meal) res = res.filter(e => e.meal === parsed.meal);
+  if(parsed.year) res = res.filter(e => (e.date||"").startsWith(parsed.year+"-"));
+  if(parsed.after) res = res.filter(e => e.date >= parsed.after);
+  if(parsed.before) res = res.filter(e => e.date <= parsed.before);
+
+  if(parsed.guest){
+    const term = parsed.guest.toLowerCase();
+    res = res.filter(e => (e.guests||[]).some(gid => guestNameById(gid).toLowerCase().includes(term)));
+  }
+  if(parsed.dish){
+    const term = parsed.dish.toLowerCase();
+    res = res.filter(e => (e.dishes||[]).some(did => (state.dishes.find(d=>d.id===did)?.name||"").toLowerCase().includes(term)));
+  }
+  if(parsed.text.length){
+    const term = parsed.text.join(" ").toLowerCase();
+    res = res.filter(e => {
+      const guestNames = (e.guests||[]).map(guestNameById).join(" ");
+      const dishNames = (e.dishes||[]).map(did => (state.dishes.find(d=>d.id===did)?.name||"")).join(" ");
+      const blob = [e.meal, e.date, e.menu, e.notes, guestNames, dishNames].join(" ").toLowerCase();
+      return blob.includes(term);
+    });
+  }
+
+  res.sort((a,b)=>b.date.localeCompare(a.date));
+  if(res.length===0){
+    searchResults.innerHTML = `<div class="card-sub">אין תוצאות</div>`;
+    return;
+  }
+  searchResults.innerHTML = res.slice(0, 100).map(e => renderEventCard(e)).join("");
+  searchResults.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => deleteEvent(b.dataset.del)));
+  searchResults.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => openEventEditor(b.dataset.edit)));
+}
+
+/* =========================
+   Backup / Restore / CSV Export / Reset
+========================= */
+document.getElementById("btnBackup").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  downloadBlob(blob, `hosting-backup-${nowDateISO()}.json`);
+});
+
+document.getElementById("restoreFile").addEventListener("change", async (e) => {
+  const f = e.target.files?.[0];
+  if(!f) return;
+  try{
+    const text = await f.text();
+    const obj = JSON.parse(text);
+    if(!obj || typeof obj !== "object") throw new Error("Invalid JSON");
+    if(!("guests" in obj) || !("events" in obj)) throw new Error("Missing keys");
+    state = { ...DEFAULT_STATE, ...obj };
+    saveState();
+    renderAll();
+    toast("שוחזר בהצלחה");
+  }catch(err){
+    alert("שחזור נכשל: " + err.message);
+  }finally{
+    e.target.value = "";
+  }
+});
+
+document.getElementById("btnExportCSV").addEventListener("click", () => {
+  const rows = [];
+  rows.push(["date","meal","guests","dishes","menu","notes"].join(","));
+  for(const e of state.events.slice().sort((a,b)=>a.date.localeCompare(b.date))){
+    const guestNames = (e.guests||[]).map(guestNameById).join("|").replaceAll('"','""');
+    const dishNames = (e.dishes||[]).map(did => (state.dishes.find(d=>d.id===did)?.name||"")).join("|").replaceAll('"','""');
+    const menuTxt = safeText(e.menu).replaceAll('"','""');
+    const notesTxt = safeText(e.notes).replaceAll('"','""');
+    rows.push(`${e.date},${e.meal},"${guestNames}","${dishNames}","${menuTxt}","${notesTxt}"`);
+  }
+  const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8" });
+  downloadBlob(blob, `events-${nowDateISO()}.csv`);
+});
+
+document.getElementById("btnReset").addEventListener("click", () => {
+  if(!confirm("לאפס את כל הנתונים? (בלתי הפיך)")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("guests");
+  localStorage.removeItem("events");
+  state = structuredClone(DEFAULT_STATE);
+  renderAll();
+  toast("אופס");
+});
+
+/* =========================
+   Window controls
+========================= */
+const analyticsDays = document.getElementById("analyticsDays");
+document.getElementById("btnApplyWindow").addEventListener("click", () => {
+  const days = clamp(parseInt(analyticsDays.value || "365", 10), 7, 3650);
+  analyticsDays.value = days;
+  buildDashboard(days);
+});
+
+/* =========================
+   Initial Render
+========================= */
+function renderAll(){
+  // defaults
+  if(!eventDate.value) eventDate.value = nowDateISO();
+
+  renderDishes();
+  renderGuestCheckboxes();
+  renderEventsList();
+  renderGuests();
+
+  const days = clamp(parseInt(analyticsDays.value || "365", 10), 7, 3650);
+  buildDashboard(days);
+
+  // network
+  buildNetwork();
+
+  // stale panel refresh (cheap)
+  document.getElementById("btnRefreshStale").click();
+}
+
+renderAll();
+
+/* =========================
+   PWA
+========================= */
 if("serviceWorker" in navigator){
- navigator.serviceWorker.register("service-worker.js");
+  navigator.serviceWorker.register("service-worker.js").catch(()=>{});
+}
+
+/* =========================
+   Tiny UI Utils
+========================= */
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+function escapeAttr(str){ return escapeHtml(str).replaceAll('"','&quot;'); }
+function downloadBlob(blob, filename){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+}
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+let toastTimer = null;
+function toast(msg){
+  clearTimeout(toastTimer);
+  let t = document.getElementById("toast");
+  if(!t){
+    t = document.createElement("div");
+    t.id="toast";
+    t.style.position="fixed";
+    t.style.left="18px";
+    t.style.bottom="18px";
+    t.style.padding="10px 12px";
+    t.style.borderRadius="14px";
+    t.style.border="1px solid rgba(255,255,255,.12)";
+    t.style.background="rgba(15,26,46,.85)";
+    t.style.color="#e8eefc";
+    t.style.boxShadow="0 10px 25px rgba(0,0,0,.35)";
+    t.style.zIndex="9999";
+    t.style.backdropFilter="blur(8px)";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity="1";
+  toastTimer = setTimeout(()=>{ t.style.opacity="0"; }, 1400);
 }
 </script>
-
 </body>
 </html>
