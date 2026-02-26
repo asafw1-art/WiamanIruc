@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Hosting Manager</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c7be5">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: Arial; direction: rtl; margin:20px; background:#f4f6f8; }
+.section { background:white; padding:15px; margin-bottom:20px; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+input,textarea,select,button { width:100%; margin:5px 0; padding:8px; }
+button { background:#2c7be5; color:white; border:none; border-radius:5px; cursor:pointer; }
+button:hover { background:#1a68d1; }
+canvas { max-height:300px; }
+</style>
+</head>
+<body>
+
+<h1>ניהול ידע חברתי</h1>
+
+<div class="section">
+<h2>➕ הוספת אורח</h2>
+<input id="guestName" placeholder="שם">
+<button onclick="addGuest()">הוסף</button>
+<div id="guestList"></div>
+</div>
+
+<div class="section">
+<h2>📅 אירוע חדש</h2>
+<input type="date" id="eventDate">
+<select id="mealType">
+<option>בשרי</option>
+<option>חלבי</option>
+<option>צמחוני</option>
+<option>אחר</option>
+</select>
+<div id="guestCheckboxes"></div>
+<textarea id="menu" placeholder="תפריט"></textarea>
+<button onclick="addEvent()">שמור</button>
+</div>
+
+<div class="section">
+<h2>📊 Dashboard</h2>
+<canvas id="mealChart"></canvas>
+</div>
+
+<script>
+let guests = JSON.parse(localStorage.getItem("guests")) || [];
+let events = JSON.parse(localStorage.getItem("events")) || [];
+
+function save(){
+ localStorage.setItem("guests",JSON.stringify(guests));
+ localStorage.setItem("events",JSON.stringify(events));
+}
+
+function addGuest(){
+ let name=document.getElementById("guestName").value.trim();
+ if(!name)return;
+ guests.push({id:Date.now(),name});
+ document.getElementById("guestName").value="";
+ save(); render();
+}
+
+function addEvent(){
+ let date=document.getElementById("eventDate").value;
+ let meal=document.getElementById("mealType").value;
+ let menu=document.getElementById("menu").value;
+ let selected=[...document.querySelectorAll("input[name=guest]:checked")].map(c=>parseInt(c.value));
+ if(!date||selected.length===0)return;
+ events.push({id:Date.now(),date,meal,menu,guests:selected});
+ save(); render();
+}
+
+function renderGuests(){
+ document.getElementById("guestList").innerHTML=guests.map(g=>g.name).join("<br>");
+ document.getElementById("guestCheckboxes").innerHTML=guests.map(g=>
+ `<label><input type=checkbox name=guest value=${g.id}> ${g.name}</label><br>`
+ ).join("");
+}
+
+function buildChart(){
+ let mealCount={};
+ events.forEach(e=>mealCount[e.meal]=(mealCount[e.meal]||0)+1);
+ new Chart(document.getElementById("mealChart"),{
+ type:'bar',
+ data:{labels:Object.keys(mealCount),
+ datasets:[{label:"סוגי ארוחות",data:Object.values(mealCount)}]}
+ });
+}
+
+function render(){
+ renderGuests();
+ if(events.length>0) buildChart();
+}
+
+render();
+
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+
+</body>
+</html>
